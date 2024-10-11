@@ -10,6 +10,17 @@ using ..CoreModule: Options, Dataset, create_expression, DATA_TYPE, LOSS_TYPE
 using ..ComplexityModule: compute_complexity
 using ..DimensionalAnalysisModule: violates_dimensional_constraints
 
+function _frozen_loss(
+    x::AbstractArray{T}, y::AbstractArray{T}, f::AbstractArray{T}, loss::LT
+) where {T<:DATA_TYPE,LT<:Union{Function,SupervisedLoss}}
+    if LT <: SupervisedLoss
+        return LossFunctions.mean(loss, x .+ f, y)
+    else
+        l(i) = loss(x[i] .+ f[i], y[i])
+        return LossFunctions.mean(l, eachindex(x))
+    end
+end
+
 function _loss(
     x::AbstractArray{T}, y::AbstractArray{T}, loss::LT
 ) where {T<:DATA_TYPE,LT<:Union{Function,SupervisedLoss}}
